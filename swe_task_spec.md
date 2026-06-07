@@ -1,10 +1,10 @@
 # SWE-bench Task 字段说明
 
-本文档说明 `swe_task.json` 中每个字段的含义、来源以及在评估流程中的作用。
+本文档说明 `task.json` 中每个字段的含义、来源以及在评估流程中的作用。
 
 ## 整体结构
 
-`swe_task.json` 是一个 JSON 数组，每个元素代表一个 SWE-bench task 实例。一个 task 描述了一个完整的"bug → 修复 → 验证"流程。
+`task.json` 是一个 JSON 数组，每个元素代表一个 SWE-bench task 实例。一个 task 描述了一个完整的"bug → 修复 → 验证"流程。
 
 ## 字段详解
 
@@ -235,5 +235,5 @@ git add . && git commit -m "Fix bug"
 git checkout $BASE_COMMIT
 python3 -m pytest tests/ -v    # 记录 FAIL 和 PASS 的测试
 
-# 6. 填写 swe_task.json
+# 6. 填写 task.json
 ```

@@ -6,13 +6,12 @@ SWE-bench 评估任务定义和工具集。配合 mock 项目 [swe-bench-test](h
 
 ```
 .
-├── swe_task.json                          # SWE-bench 格式的 task 定义
-├── swe_task_spec.md                       # swe_task.json 字段说明文档
-├── mini_swe_agent.py                      # 自定义 mini SWE agent (DashScope)
+├── swe_task_spec.md                       # task.json 字段说明文档
 ├── dashscope_config.yaml                  # 官方 mini-swe-agent 的 DashScope 配置
-└── tasks/                                 # Harbor 格式的 task
-    └── ichengchao__swe-bench-test-1/
-        ├── task.toml                      # 任务元数据
+└── tasks/                                 # 任务目录 (每个子目录为一个 task)
+    └── ichengchao__swe-bench-test-1/      # task 实例
+        ├── task.json                      # SWE-bench 格式的 task 定义
+        ├── task.toml                      # Harbor 格式元数据
         ├── instruction.md                 # 问题描述 (agent 输入)
         ├── environment/
         │   └── Dockerfile                 # 构建 buggy 环境
@@ -22,17 +21,19 @@ SWE-bench 评估任务定义和工具集。配合 mock 项目 [swe-bench-test](h
             └── test.sh                    # 验证脚本 (FAIL_TO_PASS + PASS_TO_PASS)
 ```
 
-## Task 说明
+每个 task 独立一个目录，目录名即 `instance_id`，可持续扩展。
 
-目标仓库：[ichengchao/swe-bench-test](https://github.com/ichengchao/swe-bench-test)
+## 已有 Task
 
-Bug：`fibonacci(0)` 返回 `1` 而不是 `0`（Issue [#1](https://github.com/ichengchao/swe-bench-test/issues/1)）
+| instance_id | 目标仓库 | Bug 描述 | 难度 |
+|---|---|---|---|
+| `ichengchao__swe-bench-test-1` | [swe-bench-test](https://github.com/ichengchao/swe-bench-test) | `fibonacci(0)` 返回 `1` 而不是 `0` ([Issue #1](https://github.com/ichengchao/swe-bench-test/issues/1)) | easy |
 
-详细的字段说明见 [swe_task_spec.md](swe_task_spec.md)。
+详细的 task.json 字段说明见 [swe_task_spec.md](swe_task_spec.md)。
 
 ## 使用方式
 
-### 方式一：官方 mini-swe-agent (推荐)
+### 使用官方 mini-swe-agent
 
 [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) 是 SWE-agent 团队的官方极简 agent，约 100 行代码，SWE-bench verified 得分超 74%。
 
@@ -110,40 +111,9 @@ python3 -m pytest tests/test_core.py -v
 git checkout . && git checkout master
 ```
 
-### 方式二：自定义 mini SWE agent
+### 手动验证 (用 gold patch)
 
-`mini_swe_agent.py` 是一个自定义的简易 agent，直接读取 `swe_task.json` 并自动完成整个流程。
-
-#### 1. 安装依赖
-
-```bash
-pip3 install openai pytest
-```
-
-#### 2. 将 swe_task.json 复制到目标仓库并运行
-
-```bash
-cp swe_task.json /path/to/swe-bench-test/
-cp mini_swe_agent.py /path/to/swe-bench-test/
-cd /path/to/swe-bench-test
-
-export DASHSCOPE_API_KEY="sk-your-dashscope-key"
-python3 mini_swe_agent.py swe_task.json
-```
-
-执行流程：
-1. 读取 task JSON
-2. Checkout 到 buggy commit
-3. 验证 FAIL_TO_PASS 测试确实失败
-4. 将代码和问题描述发给 LLM，生成修复 patch
-5. Apply patch (支持多种 fallback 策略)
-6. 运行 FAIL_TO_PASS 测试 (应通过)
-7. 运行 PASS_TO_PASS 测试 (无回归)
-8. 输出结果：RESOLVED 或 FAILED
-
-### 方式三：手动验证 (用 gold patch)
-
-不依赖任何 agent，直接用 `swe_task.json` 中的 gold patch 验证整个评估流程。
+不依赖任何 agent，直接用 task.json 中的 gold patch 验证整个评估流程。
 
 ```bash
 cd /path/to/swe-bench-test
@@ -155,10 +125,10 @@ git checkout 932468602d3778403ec173ca7a1151d329c9e027
 python3 -m pytest tests/test_core.py::TestFibonacci::test_zero -v
 # 预期输出: FAILED - assert 1 == 0
 
-# 3. 从 swe_task.json 中提取 patch 并保存为文件
+# 3. 从 task.json 中提取 patch 并保存为文件
 python3 -c "
 import json
-with open('swe_task.json') as f:
+with open('task.json') as f:
     task = json.load(f)[0]
 with open('gold_patch.diff', 'w') as f:
     f.write(task['patch'])
@@ -182,7 +152,7 @@ git checkout . && git checkout master
 
 ## SWE-bench vs Harbor 格式对比
 
-| SWE-bench (JSON) | Harbor (目录) | 说明 |
+| SWE-bench (task.json) | Harbor (目录) | 说明 |
 |---|---|---|
 | `instance_id` | 目录名 + `task.toml` | 任务标识 |
 | `problem_statement` | `instruction.md` | agent 看到的输入 |
@@ -193,10 +163,10 @@ git checkout . && git checkout master
 
 ## 如何创建新的 task
 
-1. 在 [swe-bench-test](https://github.com/ichengchao/swe-bench-test) 中引入新 bug 并 commit
+1. 在目标仓库中引入新 bug 并 commit
 2. 记录 buggy commit SHA
 3. 创建 GitHub Issue 描述问题
 4. 修复 bug 并 commit，记录 patch diff
-5. 在 `swe_task.json` 中添加新的 task 实例
-6. 在 `tasks/` 下创建对应的 Harbor 格式目录
+5. 在 `tasks/` 下创建新目录（以 `{owner}__{repo}-{issue}` 命名）
+6. 在目录中添加 `task.json`（SWE-bench 格式）和 Harbor 格式文件
 7. 用 agent 跑一遍验证
