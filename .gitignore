@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+agent_output.json
+gold_patch.diff
+_agent_patch.diff

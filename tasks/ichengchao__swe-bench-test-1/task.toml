@@ -1,0 +1,36 @@
+version = "1.3"
+
+[task]
+name = "ichengchao/swe-bench-test-1"
+description = "Fix fibonacci(0) returning 1 instead of 0"
+authors = ["ichengchao"]
+keywords = ["python", "bug-fix", "fibonacci"]
+
+[metadata]
+difficulty = "easy"
+category = "bug-fix"
+source = "https://github.com/ichengchao/swe-bench-test/issues/1"
+repo = "ichengchao/swe-bench-test"
+base_commit = "932468602d3778403ec173ca7a1151d329c9e027"
+language = "python"
+
+[environment]
+build_timeout_sec = 300.0
+docker_image = "python:3.9-slim"
+os = "linux"
+cpus = 1
+memory = "1G"
+storage = "5G"
+
+[environment.working_directory]
+path = "/app"
+
+[agent]
+timeout_sec = 300.0
+user = "root"
+network_mode = "no-network"
+
+[verifier]
+timeout_sec = 60.0
+environment_mode = "shared"
+user = "root"
