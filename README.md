@@ -6,22 +6,24 @@ SWE-bench 评估任务定义和工具集。配合 mock 项目 [swe-bench-test](h
 
 ```
 .
-├── swe_task_spec.md                       # task.json 字段说明文档
-├── dashscope_config.yaml                  # 官方 mini-swe-agent 的 DashScope 配置
-└── tasks/                                 # 任务目录 (每个子目录为一个 task)
-    └── ichengchao__swe-bench-test-1/      # task 实例
-        ├── task.json                      # SWE-bench 格式的 task 定义
-        ├── task.toml                      # Harbor 格式元数据
-        ├── instruction.md                 # 问题描述 (agent 输入)
+├── swe_task_spec.md                           # task.json 字段说明文档
+├── dashscope_config.yaml                      # 官方 mini-swe-agent 的 DashScope 配置
+├── swe-tasks/                                 # SWE-bench 格式 (JSON)
+│   └── ichengchao__swe-bench-test-1/
+│       └── task.json
+└── harbor-tasks/                              # Harbor 格式 (目录结构)
+    └── ichengchao__swe-bench-test-1/
+        ├── task.toml                          # 任务元数据
+        ├── instruction.md                     # 问题描述 (agent 输入)
         ├── environment/
-        │   └── Dockerfile                 # 构建 buggy 环境
+        │   └── Dockerfile                     # 构建 buggy 环境
         ├── solution/
-        │   └── solve.sh                   # gold patch 修复脚本
+        │   └── solve.sh                       # gold patch 修复脚本
         └── tests/
-            └── test.sh                    # 验证脚本 (FAIL_TO_PASS + PASS_TO_PASS)
+            └── test.sh                        # 验证脚本
 ```
 
-每个 task 独立一个目录，目录名即 `instance_id`，可持续扩展。
+两种格式独立存放，`instance_id` 作为目录名保持一致，方便对照和扩展。
 
 ## 已有 Task
 
@@ -167,6 +169,6 @@ git checkout . && git checkout master
 2. 记录 buggy commit SHA
 3. 创建 GitHub Issue 描述问题
 4. 修复 bug 并 commit，记录 patch diff
-5. 在 `tasks/` 下创建新目录（以 `{owner}__{repo}-{issue}` 命名）
-6. 在目录中添加 `task.json`（SWE-bench 格式）和 Harbor 格式文件
+5. 在 `swe-tasks/` 下创建新目录，添加 `task.json`（SWE-bench 格式）
+6. 在 `harbor-tasks/` 下创建新目录，添加 Harbor 格式文件
 7. 用 agent 跑一遍验证
